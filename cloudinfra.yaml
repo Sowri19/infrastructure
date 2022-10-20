@@ -31,6 +31,9 @@ Parameters:
     Description: "Region 3"
     Type: Number
     Default: 2 
+  ImageID:
+    Description: "AMI ID Generated"
+    Type: String
 
 Resources:
   VPC:
@@ -123,4 +126,43 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet3
 
+  SecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+      Properties:
+        VpcId:
+          Ref: VPC
+        GroupDescription: Allow http to client host
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 3000 
+            ToPort: 3000
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 4433
+            CidrIp: 0.0.0.0/0
 
+    ECInstance:
+      Type: AWS::EC2::Instance
+      Properties: 
+        InstanceType: t2.micro
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        ImageId: !REF ImageID
+        SubnetId: !Ref PublicSubnet1CIDR
+        KeyName: aws
+        BlockDeviceMappings:
+          -DeviceName: dev/xvdb
+          Ebs:
+            VolumeSize: 50
+            VolumeType: "gp2"
+            DeleteOnTermination: "true"
+      
