@@ -1,32 +1,39 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: CSYE6225 Cloud Computing and Network Structures - Assignment 03 
+Description: CSYE6225 Cloud Computing and Network Structures - Assignment 03
 # Create VPC
 Parameters:
-  VpcCidrBlock:
-    Description: "CIDR block for VPC"
-    Type: String
-    Default: "10.0.0.0/16"
-  # 3 ref to Subnets
-  PublicSubnet1CIDR:
-    Description: "Public Subnet 1 CIDR block"
-    Type: String
-    Default: "10.0.0.0/24"
-  PublicSubnet2CIDR:
-    Description: "Public Subnet 2 CIDR block"
-    Type: String
-    Default: "10.0.1.0/24"
-  PublicSubnet3CIDR:
-    Description: "Public Subnet 1 CIDR block"
-    Type: String
-    Default: "10.0.2.0/24"
+  Aclass:
+    Description: "IPs Dynamically created"
+    Type: Number
+    Default: 0
+    ConstraintDescription: 'Range Constraint [0-255]'
+    MinValue: 0
+    MaxValue: 255
+  # VpcCidrBlock:
+  #   Description: "CIDR block for VPC"
+  #   Type: String
+  #   Default: "10.0.0.0/16"
+  # # 3 ref to Subnets
+  # PublicSubnet1CIDR:
+  #   Description: "Public Subnet 1 CIDR block"
+  #   Type: String
+  #   Default: "10.0.0.0/24"
+  # PublicSubnet2CIDR:
+  #   Description: "Public Subnet 2 CIDR block"
+  #   Type: String
+  #   Default: "10.0.1.0/24"
+  # PublicSubnet3CIDR:
+  #   Description: "Public Subnet 1 CIDR block"
+  #   Type: String
+  #   Default: "10.0.2.0/24"
   availzone1:
     Description: "Region 1"
     Type: Number
-    Default: 0 
+    Default: 0
   availzone2:
     Description: "Region 2"
     Type: Number
-    Default: 1 
+    Default: 1
   availzone3:
     Description: "Region 3"
     Type: Number
@@ -34,12 +41,57 @@ Parameters:
   ImageID:
     Description: "AMI ID Generated"
     Type: String
+S3BucketNameRandom:
+    Description: "Random s3 Bucket Name Everytime"
+    Type: String
+    Default: DefaultNameBucket
+
+#RDS MYSQL Database Parameters
+DBName:
+    Default: csye6225
+    Description: This represents the MySql DB RDS 
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: should begin with a letter and should contain only alphanumeric characters.
+DBInstanceClass:
+  Default: db.t3.micro
+  Description: DB instance class
+  Type: String
+  ConstraintDescription: Should select valid DB instance type.
+DBAllocatedStorage:
+  Default: '50'
+  Description: The size of the database (GiB)
+  Type: Number
+  MinValue: '20'
+  MaxValue: '65536'
+  ConstraintDescription: must be between 20 and 65536 GiB.
+DBUsername:
+  NoEcho: 'true'
+  Description: Username MySQL database access
+  Type: String
+  MinLength: '1'
+  MaxLength: '16'
+  AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  ConstraintDescription: should begin with a letter and contain only alphanumeric characters.
+  Default: csye6225
+DBPassword:
+  NoEcho: 'true'
+  Description: Password MySQL database access
+  Type: String
+  MinLength: '8'
+  MaxLength: '41'
+  AllowedPattern: '[a-zA-Z0-9]*'
+  ConstraintDescription: should contain only alphanumeric characters.
+  Default: password
+
 
 Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: !Ref VpcCidrBlock
+      CidrBlock: !Sub '10.${Aclass}.0.0/16'
       EnableDnsSupport: "true"
       EnableDnsHostnames: "true"
       InstanceTenancy: "default"
@@ -65,7 +117,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [!Ref availzone1,!GetAZs ""]
+      AvailabilityZone: !Select [!Ref availzone1, !GetAZs ""]
       CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
@@ -75,8 +127,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [!Ref availzone2,!GetAZs ""]
-      CidrBlock: !Ref PublicSubnet2CIDR
+      AvailabilityZone: !Select [!Ref availzone2, !GetAZs ""]
+      CidrBlock: !Sub '10.${Aclass}.32.0/20'
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -85,8 +137,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [!Ref availzone3,!GetAZs ""]
-      CidrBlock: !Ref PublicSubnet3CIDR
+      AvailabilityZone: !Select [!Ref availzone3, !GetAZs ""]
+      CidrBlock: !Sub '10.${Aclass}.48.0/20'
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -109,7 +161,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
       GatewayId: !Ref InternetGateway
-#Associate public route tables with subnets
+  #Associate public route tables with subnets
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -152,7 +204,7 @@ Resources:
           FromPort: 8081
           ToPort: 8081
           CidrIp: 0.0.0.0/0
-# Running EC2 Instance        
+  # Running EC2 Instance
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -177,4 +229,137 @@ Resources:
           ls
           pwd
           cd /home/ubuntu/webapp
-          npm run start
+          node src/controller/client_controller.js
+
+# Creating the three private subnets in the same availability zones for RDS
+PrivateSubnet1RDS:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [!Ref availzone1,!GetAZs ""]
+      CidrBlock: !Sub '10.${Aclass}.64.0/20'
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: Private Subnet 1 RDS
+PrivateSubnet2RDS:
+        Type: AWS::EC2::Subnet
+        Properties:
+          VpcId: !Ref VPC
+          AvailabilityZone: !Select [!Ref availzone2,!GetAZs ""]
+          CidrBlock: !Sub '10.${Aclass}.80.0/20'
+          MapPublicIpOnLaunch: false
+          Tags:
+            - Key: Name
+              Value: Private Subnet 2 RDS
+PrivateSubnet3RDS:
+        Type: AWS::EC2::Subnet
+        Properties:
+          VpcId: !Ref VPC
+          AvailabilityZone: !Select [!Ref availzone3,!GetAZs ""]
+          CidrBlock: !Sub '10.${Aclass}.96.0/20'
+          MapPublicIpOnLaunch: false
+          Tags:
+            - Key: Name
+              Value: Private Subnet 3 RDS
+#Create subnet table for RDS
+PrivateRouteTableRDS:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref VPC
+        Tags:
+        - Key: Name
+          Value: Private
+# Create Private Route is balance for assignment 5,
+# PrivateRouteRDS:
+#         Type: AWS::EC2::Route
+#         DependsOn: NATGateway
+#         Properties:
+#           RouteTableId:
+#             Ref: PrivateRouteTableRDS
+#             # Here We need to change the 0.0.0.0/0 to a somewhat restrictive IP range
+#           DestinationCidrBlock: 0.0.0.0/0
+#           GatewayId:
+#             Ref: myCarrierGateway
+# RDS Association with subnets
+PrivateSubnet1RDSAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId: !Ref PrivateSubnet1RDS
+        RouteTableId: !Ref PrivateRouteTableRDS
+PrivateSubnet2RDSAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PrivateSubnet2RDS
+    RouteTableId: !Ref PrivateRouteTableRDS
+PrivateSubnet3RDSAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PrivateSubnet3RDS
+    RouteTableId: !Ref PrivateRouteTableRDS
+
+#NAT Gateway
+NATGateway:
+  Type: AWS::EC2::NatGateway
+  Properties:
+    AllocationId: !GetAtt ElasticIPAddress.AllocationId
+    SubnetId: !Ref PublicSubnet1
+    Tags:
+    - Key: Name
+      Value: NAT Gateway
+  ElasticIPAddress:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: VPC
+# Private Route
+    PrivateRouteRDS:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId: !Ref PrivateRouteTableForRDS
+        NatGatewayId: !Ref NATGateway
+        DestinationCidrBlock: 0.0.0.0/0
+#Security Group Parameters for DB
+DatabaseSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    VpcId:
+      Ref: VPC
+    GroupDescription: This is the security group for RDS Service
+    SecurityGroupIngress:
+      - SourceSecurityGroupId: !Ref SecurityGroup
+        IpProtocol: tcp
+        FromPort: 3080
+        ToPort: 3080
+    SecurityGroupEgress:
+      - CidrIp: '0.0.0.0/0'
+        IpProtocol: -1 # Allow all
+#S3 Bucket... Need to implement random Name based on environment
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: SomeRandomNameBucketNeedToBeChanged
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: TransitionStorageType
+            Status: Enabled
+            Transitions:
+              - StorageClass: "STANDARD_IA"
+                TransitionInDays: 30
+  RDSDBInstance:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: MySQL
+      EngineVersion: "8.0.16"
+      DBInstanceClass: db.t3.micro
+      MultiAZ: No
+      DBInstanceIdentifier: csye6225
+      MasterUsername: csye6225
+      MasterUserPassword: password
+      DBSubnetGroupName: !Ref PrivateRouteTableRDS
+      PubliclyAccessible: No
+      DBName: csye6225
