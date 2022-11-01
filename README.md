@@ -1,4 +1,6 @@
 # INFRA
+NUID: 002926129
+Name: Satya Sowri Sampath Korturti
 
 -> Procedure to configure profiles
 aws configure --profile=sowrisamdev
@@ -14,16 +16,20 @@ aws configure list-profiles
 --> Change Regions command
 export AWS_REGION=us-east-1
 
-1--> create stack command
+--> create stack command (for Assignment-3)
 aws cloudformation create-stack --stack-name vpc --template-body file://cloudinfra.yaml --parameters ParameterKey=availzone1,ParameterValue=0 ParameterKey=availzone2,ParameterValue=1  ParameterKey=availzone3,ParameterValue=2 --region us-east-1 --profile sowrisamdev
 
-updated stack command
+--> (updated) to create stack command (for Assignment-4)
 aws cloudformation create-stack --stack-name demo717 --template-body file://cloudinfra.yml --region us-east-1 --profile sowridemo --parameters ParameterKey=ImageID,ParameterValue=ami-065436957b5fd21c5
 
-copy the public ip and run the commands in the postman.
+--> (Updated) to create stack command (for Assignment-5)
+aws cloudformation create-stack --stack-name demostack --template-body file://cloudinfra.yml --region us-east-1 --profile sowridemo --parameters ParameterKey=AMIImageId,ParameterValue=ami-05566675efcb6e497 ParameterKey=AWS_ACCESS_KEY_ID,ParameterValue=demokey ParameterKey=AWS_SECRET_ACCESS_KEY,ParameterValue=demosecretkey --capabilities CAPABILITY_NAMED_IAM
 
-2--> View stack
+--> Delete the stack (Assignment-5)
+aws cloudformation delete-stack --stack-name test --profile sowridemo 
+
+copy the public ip and run the endpoints in the postman
+
+--> View stack
 aws cloudformation describe-stacks --profile sowrisamdev --region us-east-1
 
-3--> Delete Stack
-aws cloudformation delete-stack --stack-name vpc1 --profile sowrisamdev --region us-east-1
