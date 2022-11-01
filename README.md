@@ -23,7 +23,7 @@ aws cloudformation create-stack --stack-name vpc --template-body file://cloudinf
 aws cloudformation create-stack --stack-name demo717 --template-body file://cloudinfra.yml --region us-east-1 --profile sowridemo --parameters ParameterKey=ImageID,ParameterValue=ami-065436957b5fd21c5
 
 --> (Updated) to create stack command (for Assignment-5)
-aws cloudformation create-stack --stack-name demostack --template-body file://cloudinfra.yml --region us-east-1 --profile sowridemo --parameters ParameterKey=AMIImageId,ParameterValue=ami-05566675efcb6e497 ParameterKey=AWS_ACCESS_KEY_ID,ParameterValue=demokey ParameterKey=AWS_SECRET_ACCESS_KEY,ParameterValue=demosecretkey --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name demostack --template-body file://cloudinfra.yml --region us-east-1 --profile sowridemo --parameters ParameterKey=AMIImageId,ParameterValue=ami-05566675efcb6e497 ParameterKey=AWSCLOUDACCESSKEY,ParameterValue=demokey ParameterKey=AWSCLOUDACCESSSECRET,ParameterValue=demosecretkey --capabilities CAPABILITY_NAMED_IAM
 
 --> Delete the stack (Assignment-5)
 aws cloudformation delete-stack --stack-name test --profile sowridemo 
