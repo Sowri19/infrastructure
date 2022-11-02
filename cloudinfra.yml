@@ -33,8 +33,8 @@ Parameters:
     Description: "Route to open Internet Access"
     Type: String
     Default: "0.0.0.0/0"
-  AMIImageId:
-    Default:  ami-08c40ec9ead489470
+  AppAMIImage:
+    Default: ami-0660c0e4d852a6dd7
     Type: String
     Description: Ami ID of Image
   AppRootVolumeType:
@@ -46,21 +46,21 @@ Parameters:
     Type: Number
     Default: 50
   AppInstanceType:
-    Description: "WEB SERVER EC2 instance type"
+    Description: "WebServer EC2 instance type"
     Type: String
     Default: "t2.micro"
   SSHKeyName:
-    Description: "It is the name of the existing key pair in the EC2 Instance to send the data"
+    Description: "Name of an existing EC2 KeyPair to enable SSH access to the instance"
     Type: String
     Default: "aws"
-  AWSCLOUDACCESSKEY:
+  ACCESSKEY:
     Description: "access Key"
     Type: String
-    Default: "Random Aws Cloud Access Key" 
-  AWSCLOUDACCESSSECRET:
+    Default: "Random Access Key"
+  ACCESSSECRET:
     Description: " secret access Key"
     Type: String
-    Default: "Random Aws Cloud Access Secret Key"
+    Default: "Random Secret Access Key" 
 
 
 Resources:
@@ -316,7 +316,7 @@ Resources:
         - Ref: PrivateSubnet1
         - Ref: PrivateSubnet2
         - Ref: PrivateSubnet3
-  SQLDBInstance:
+  MySqlDbInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       DBName: csye6225
@@ -377,7 +377,7 @@ Resources:
       Roles:
         - Ref: EC2Role
 
-  EC2Instance: 
+  myEC2Instance: 
     Type: AWS::EC2::Instance
     Properties: 
       BlockDeviceMappings:
@@ -386,7 +386,7 @@ Resources:
             VolumeSize: !Ref AppRootVolumeSize
             VolumeType: !Ref AppRootVolumeType
             DeleteOnTermination: "true"
-      ImageId: !Ref AMIImageId
+      ImageId: !Ref AppAMIImage
       InstanceType: !Ref AppInstanceType
       KeyName: !Ref SSHKeyName
       NetworkInterfaces: 
@@ -400,15 +400,15 @@ Resources:
         Fn::Base64: 
             !Sub |
             #!/bin/bash
-            echo export RDShost="${SQLDBInstance.Endpoint.Address}" >> /etc/profile
-            echo export RDSuser="csye6225" >> /etc/profile
-            echo export RDSpassword="Password" >> /etc/profile
-            echo export S3BUCKET="${S3bucket}" >> /etc/profile
-            echo export AWSCLOUD_ACCESS_KEY_ID="${AWSCLOUDACCESSKEY}" >> /etc/profile
-            echo export AWSCLOUD_SECRET_ACCESS_KEY="${AWSCLOUDACCESSSECRET}" >> /etc/profile
-            echo export RDSdatabase="csye6225" >> /etc/profile
-            echo export REGION="us-east-1" >> /etc/profile
-            sleep 40
+            echo export host="${MySqlDbInstance.Endpoint.Address}" >> /etc/profile
+            echo export user="csye6225" >> /etc/profile
+            echo export password="Password" >> /etc/profile
+            echo export BUCKET="${S3bucket}" >> /etc/profile
+            echo export AWS_ACCESS_KEY_ID="${ACCESSKEY}" >> /etc/profile
+            echo export AWS_SECRET_ACCESS_KEY="${ACCESSSECRET}" >> /etc/profile
+            echo export database="csye6225" >> /etc/profile
+            echo export region="us-east-1" >> /etc/profile
+            sleep 20
             cd /home/ubuntu/webapp
             node src/controller/client_controller.js
             echo the script is working Sowri
