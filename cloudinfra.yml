@@ -61,7 +61,10 @@ Parameters:
     Description: " secret access Key"
     Type: String
     Default: "Random Secret Access Key" 
-
+  DomainName:
+    Description: "Domain Name"
+    Type: String
+    Default: "demo.sowri.me"
 
 Resources:
   ApplicationVPC:
@@ -416,6 +419,16 @@ Resources:
         - Key: Name
           Value: application
 
+myDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Ref DomainName
+      Comment: DNS name for my instance.
+      Name: !Join ['', [!Ref 'myEC2Instance', ., !Ref 'AWS::Region',.]]
+      Type: A
+      TTL: 60
+      ResourceRecords:
+      - !GetAtt myEC2Instance.PublicIp
 
           
 
