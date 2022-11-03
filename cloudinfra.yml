@@ -61,7 +61,10 @@ Parameters:
     Description: " secret access Key"
     Type: String
     Default: "Random Secret Access Key" 
-
+  DomainName:
+    Description: "Domain Name"
+    Type: String
+    Default: "demo.sowri.me."
 
 Resources:
   ApplicationVPC:
@@ -412,10 +415,21 @@ Resources:
             cd /home/ubuntu/webapp
             node src/controller/client_controller.js
             echo the script is working Sowri
+            sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3080
       Tags:
         - Key: Name
           Value: application
 
+  myDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Ref DomainName
+      Comment: DNS name for my instance.
+      Name: !Ref DomainName
+      Type: A
+      TTL: 60
+      ResourceRecords:
+      - !GetAtt myEC2Instance.PublicIp
 
           
 
