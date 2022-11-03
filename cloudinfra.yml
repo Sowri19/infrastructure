@@ -64,7 +64,7 @@ Parameters:
   DomainName:
     Description: "Domain Name"
     Type: String
-    Default: "demo.sowri.me"
+    Default: "demo.sowri.me."
 
 Resources:
   ApplicationVPC:
@@ -415,16 +415,17 @@ Resources:
             cd /home/ubuntu/webapp
             node src/controller/client_controller.js
             echo the script is working Sowri
+            sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3080
       Tags:
         - Key: Name
           Value: application
 
-myDNSRecord:
+  myDNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneName: !Ref DomainName
       Comment: DNS name for my instance.
-      Name: !Join ['', [!Ref 'myEC2Instance', ., !Ref 'AWS::Region',.]]
+      Name: !Ref DomainName
       Type: A
       TTL: 60
       ResourceRecords:
