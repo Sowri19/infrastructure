@@ -399,6 +399,7 @@ Resources:
           GroupSet: 
             - !Ref ApplicationSecuritygroup
           SubnetId: !Ref PublicSubnet1
+      IamInstanceProfile: !Ref AppInstanceProfile
       UserData: 
         Fn::Base64: 
             !Sub |
@@ -431,6 +432,29 @@ Resources:
       ResourceRecords:
       - !GetAtt myEC2Instance.PublicIp
 
-          
+  EC2CloudWatchAgentPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: "EC2CloudWatchPolicy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - 'cloudwatch:PutMetricData'
+                - 'ec2:DescribeTags'
+                - 'logs:PutLogEvents'
+                - 'logs:DescribeLogStreams'
+                - 'logs:DescribeLogGroups'
+                - 'logs:CreateLogStream'
+                - 'logs:CreateLogGroup'
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - 'ssm:GetParameter'
+                - 'ssm:PutParameter'
+              Resource: "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+        Roles:
+          - Ref: EC2Role          
 
           
