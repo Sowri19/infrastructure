@@ -73,6 +73,10 @@ Parameters:
     Description: "Name Tag for LB Security Group"
     Type: String
     Default: "load balancer"
+  CertificateARN:
+    Description: The ARN for the first certificate
+    Type: String
+    Default: arn:aws:acm:us-east-1:500270589937:certificate/72113255-218e-4748-b973-b117fb354b1f
 
 
 Resources:
