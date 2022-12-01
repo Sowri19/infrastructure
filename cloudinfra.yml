@@ -64,7 +64,7 @@ Parameters:
   DomainName:
     Description: "Domain Name"
     Type: String
-    Default: "demo.sowri.me."
+    Default: "sowri.me."
 
 Resources:
   ApplicationVPC:
@@ -460,12 +460,12 @@ Resources:
 
   SNSservice:
     Type: AWS::SNS::Topic
-        Properties:
-          DisplayName: verify_email
-          Subscription:
-            - Endpoint: !GetAtt LambdaFunction.Arn
-              Protocol: lambda
-          TopicName: verify_email
+    Properties:
+      DisplayName: verify_email
+      Subscription:
+        - Endpoint: !GetAtt LambdaFunction.Arn
+          Protocol: lambda
+      TopicName: verify_email
 
   SNStopicpolicy:
     Type: AWS::SNS::TopicPolicy
@@ -560,8 +560,8 @@ Resources:
             AttributeName: "TokenName"
             KeyType: "RANGE"
         ProvisionedThroughput: 
-          ReadCapacityUnits: 10
-          WriteCapacityUnits: 5
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
         TableName: csye-6225
         TimeToLiveSpecification:
           AttributeName: TimeToLive
