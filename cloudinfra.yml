@@ -65,6 +65,15 @@ Parameters:
     Description: "Domain Name"
     Type: String
     Default: "sowri.me."
+  AppSecurityGroup:
+    Description: "Name Tag for Application Security Group"
+    Type: String
+    Default: "application"
+  LBSecurityGroup:
+    Description: "Name Tag for LB Security Group"
+    Type: String
+    Default: "load balancer"
+
 
 Resources:
   ApplicationVPC:
@@ -216,48 +225,48 @@ Resources:
        DestinationCidrBlock: !Ref PublicRouteCidrBlock
        GatewayId:
          Ref: myInternetGateway
-  ApplicationSecuritygroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow http/https/ssh to EC2 Instance
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3080
-          ToPort: 3080
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 0.0.0.0/0
-      VpcId: !Ref ApplicationVPC
-      Tags:
-      - Key: Name
-        Value: application
+  # ApplicationSecuritygroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Allow http/https/ssh to EC2 Instance
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 3080
+  #         ToPort: 3080
+  #         CidrIp: 0.0.0.0/0
+  #     SecurityGroupEgress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 443
+  #         ToPort: 443
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 3306
+  #         ToPort: 3306
+  #         CidrIp: 0.0.0.0/0
+  #     VpcId: !Ref ApplicationVPC
+  #     Tags:
+  #     - Key: Name
+  #       Value: application
   DatabaseSecuritygroup:
     DependsOn:
      - PrivateSubnet1
@@ -380,57 +389,68 @@ Resources:
       Roles:
         - Ref: EC2Role
 
-  myEC2Instance: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1  
-          Ebs:
-            VolumeSize: !Ref AppRootVolumeSize
-            VolumeType: !Ref AppRootVolumeType
-            DeleteOnTermination: "true"
-      ImageId: !Ref AppAMIImage
-      InstanceType: !Ref AppInstanceType
-      KeyName: !Ref SSHKeyName
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "true"
-          DeleteOnTermination: "true"
-          DeviceIndex: "0"
-          GroupSet: 
-            - !Ref ApplicationSecuritygroup
-          SubnetId: !Ref PublicSubnet1
-      IamInstanceProfile: !Ref AppInstanceProfile
-      UserData: 
-        Fn::Base64: 
-            !Sub |
-            #!/bin/bash
-            echo export host="${MySqlDbInstance.Endpoint.Address}" >> /etc/profile
-            echo export user="csye6225" >> /etc/profile
-            echo export password="Password" >> /etc/profile
-            echo export BUCKET="${S3bucket}" >> /etc/profile
-            echo export AWS_ACCESS_KEY_ID="${ACCESSKEY}" >> /etc/profile
-            echo export AWS_SECRET_ACCESS_KEY="${ACCESSSECRET}" >> /etc/profile
-            echo export database="csye6225" >> /etc/profile
-            echo export region="us-east-1" >> /etc/profile
-            sleep 20
-            cd /home/ubuntu/webapp
-            node src/controller/client_controller.js
-            echo the script is working Sowri
-            sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3080
-      Tags:
-        - Key: Name
-          Value: application
+  # myEC2Instance: 
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     BlockDeviceMappings:
+  #       - DeviceName: /dev/sda1  
+  #         Ebs:
+  #           VolumeSize: !Ref AppRootVolumeSize
+  #           VolumeType: !Ref AppRootVolumeType
+  #           DeleteOnTermination: "true"
+  #     ImageId: !Ref AppAMIImage
+  #     InstanceType: !Ref AppInstanceType
+  #     KeyName: !Ref SSHKeyName
+  #     NetworkInterfaces: 
+  #       - AssociatePublicIpAddress: "true"
+  #         DeleteOnTermination: "true"
+  #         DeviceIndex: "0"
+  #         GroupSet: 
+  #           - !Ref ApplicationSecuritygroup
+  #         SubnetId: !Ref PublicSubnet1
+  #     IamInstanceProfile: !Ref AppInstanceProfile
+  #     UserData: 
+  #       Fn::Base64: 
+  #           !Sub |
+  #           #!/bin/bash
+  #           echo export host="${MySqlDbInstance.Endpoint.Address}" >> /etc/profile
+  #           echo export user="csye6225" >> /etc/profile
+  #           echo export password="Password" >> /etc/profile
+  #           echo export BUCKET="${S3bucket}" >> /etc/profile
+  #           echo export AWS_ACCESS_KEY_ID="${ACCESSKEY}" >> /etc/profile
+  #           echo export AWS_SECRET_ACCESS_KEY="${ACCESSSECRET}" >> /etc/profile
+  #           echo export database="csye6225" >> /etc/profile
+  #           echo export region="us-east-1" >> /etc/profile
+  #           sleep 20
+  #           cd /home/ubuntu/webapp
+  #           node src/controller/client_controller.js
+  #           echo the script is working Sowri
+  #           sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3080
+  #     Tags:
+  #       - Key: Name
+  #         Value: application
 
-  myDNSRecord:
-    Type: AWS::Route53::RecordSet
+  # myDNSRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneName: !Ref DomainName
+  #     Comment: DNS name for my instance.
+  #     Name: !Ref DomainName
+  #     Type: A
+  #     TTL: 60
+  #     ResourceRecords:
+  #     - !GetAtt myEC2Instance.PublicIp
+  DNSRecord:
+    Type: AWS::Route53::RecordSetGroup
     Properties:
-      HostedZoneName: !Ref DomainName
-      Comment: DNS name for my instance.
-      Name: !Ref DomainName
-      Type: A
-      TTL: 60
-      ResourceRecords:
-      - !GetAtt myEC2Instance.PublicIp
+      HostedZoneName: !Ref DNSName
+      Comment: Zone apex alias targeted to LoadBalancer.
+      RecordSets:
+      - Name: !Ref DNSName
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt 'LoadBalancer.CanonicalHostedZoneID'
+          DNSName: !GetAtt 'LoadBalancer.DNSName'
 
   EC2CloudWatchAgentPolicy:
       Type: AWS::IAM::Policy
@@ -622,3 +642,322 @@ Resources:
       Roles:
         - !Ref EC2Role
   
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: load balancer security group
+        GroupName: load balancer
+        VpcId:
+          Ref: VPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp:
+            Ref: Ipv4Cidr
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp:
+            Ref: Ipv4Cidr
+        Tags:
+        - Key: Name
+          Value: !Ref LBSecurityGroup
+
+  ApplicationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: application security group
+        GroupName: application
+        VpcId:
+          Ref: ApplicationVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3080
+          ToPort: 3080
+          SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+        - IpProtocol: tcp
+          Description: SSH
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 
+            Ref: Ipv4Cidr
+        Tags:
+        - Key: Name
+          Value: !Ref AppSecurityGroup
+
+  AutoscalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: '1'
+      MaxSize: '3'
+      DesiredCapacity: '1'
+      LaunchConfigurationName: asg_launch_config
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      VPCZoneIdentifier:
+      - !Ref PublicSubnet1
+      - !Ref PublicSubnet2
+      - !Ref PublicSubnet3
+      TargetGroupARNs:
+      - !Ref TargetGroup
+      Cooldown: 60
+      Tags:
+        - Key: Name
+          Value: CSYE6225AutoscalingGroup
+          PropagateAtLaunch: "true"
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: asg_launch_config
+      LaunchTemplateData:
+        IamInstanceProfile:
+          Arn: !GetAtt
+            - AppInstanceProfile
+            - Arn
+        ImageId: !Ref AppAMIImage
+        InstanceType: !Ref AppInstanceType
+        KeyName: !Ref SSHKeyName
+        AssociatePublicIpAddress: true
+        SecurityGroupIds:
+          - !Ref ApplicationSecurityGroup
+        BlockDeviceMappings:
+          - DeviceName: "/dev/sda1"
+            Ebs:
+              VolumeSize: !Ref AppRootVolumeSize
+              VolumeType: !Ref AppRootVolumeType
+              DeleteOnTermination: true
+              Encrypted: true
+              KmsKeyId: !GetAtt EBSKmsKey.Arn
+        UserData: 
+          Fn::Base64: 
+            !Sub |
+              #!/bin/bash
+              echo export host="${MySqlDbInstance.Endpoint.Address}" >> /etc/profile
+              echo export user="csye6225" >> /etc/profile
+              echo export password="Password" >> /etc/profile
+              echo export BUCKET="${S3bucket}" >> /etc/profile
+              echo export AWS_ACCESS_KEY_ID="${ACCESSKEY}" >> /etc/profile
+              echo export AWS_SECRET_ACCESS_KEY="${ACCESSSECRET}" >> /etc/profile
+              echo export database="csye6225" >> /etc/profile
+              echo export region="us-east-1" >> /etc/profile
+              sleep 20
+              cd /home/ubuntu/webapp
+              node src/controller/client_controller.js
+              echo the script is working Sowri
+              sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3080
+        Tags:
+          - Key: Name
+            Value: application
+
+  EBSKmsKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: 'KMS Key for EBS'
+        KeyPolicy:
+          Id: "kms-key-for-ebs"
+          Version: '2012-10-17'
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS: 
+                  - !Join ["",["arn:aws:iam::",!Ref "AWS::AccountId",":root"],]
+                  - !Join ["",["arn:aws:iam::",!Ref "AWS::AccountId",":role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",],]
+              Action: kms:*
+              Resource: '*'
+            - Sid: Allow access for Key Administrators
+              Effect: Allow
+              Principal:
+                AWS: 
+                  - !Join ["",["arn:aws:iam::",!Ref "AWS::AccountId",":role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",],]
+              Action:
+                - kms:Create*
+                - kms:Describe*
+                - kms:Enable*
+                - kms:List*
+                - kms:Put*
+                - kms:Update*
+                - kms:Revoke*
+                - kms:Disable*
+                - kms:Get*
+                - kms:Delete*
+                - kms:TagResource
+                - kms:UntagResource
+                - kms:ScheduleKeyDeletion
+                - kms:CancelKeyDeletion
+              Resource: '*'
+            - Sid: Allow use of the key
+              Effect: Allow
+              Principal:
+                AWS: 
+                  - !Join ["",["arn:aws:iam::",!Ref "AWS::AccountId",":role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",],]
+              Action:
+                - kms:Encrypt
+                - kms:Decrypt
+                - kms:ReEncrypt*
+                - kms:GenerateDataKey*
+                - kms:DescribeKey
+              Resource: '*'
+            - Sid: Allow attachment of persistent resources
+              Effect: Allow
+              Principal:
+                AWS: 
+                  - !Join ["",["arn:aws:iam::",!Ref "AWS::AccountId",":role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",],]
+              Action:
+                - kms:CreateGrant
+                - kms:ListGrants
+                - kms:RevokeGrant
+              Resource: '*'
+
+  RdsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: 'KMS Key for RDS'
+      KeyPolicy:
+        Id: "kms-key-for-rds"
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action: kms:*
+            Resource: '*'
+          - Sid: Allow access for Key Administrators
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS'
+            Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:TagResource
+              - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+            Resource: '*'
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS'
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+          - Sid: Allow attachment of persistent resources
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS'
+            Action:
+              - kms:CreateGrant
+              - kms:ListGrants
+              - kms:RevokeGrant
+            Resource: '*'
+
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '5'
+      AlarmDescription: Alarm if CPU utilization more than 5%
+      Period: '300'
+      AlarmActions:
+      - !Ref ScaleOutPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref AutoscalingGroup
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '3'
+      AlarmDescription: Alarm if CPU utilization is less than 3%
+      Period: '300'
+      AlarmActions:
+      - !Ref ScaleInPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref AutoscalingGroup
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization
+
+  ScaleOutPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoscalingGroup
+      Cooldown: 60
+      ScalingAdjustment: 1
+
+  ScaleInPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AutoscalingGroup
+      Cooldown: 60
+      ScalingAdjustment: -1
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn:
+            Ref: CertificateARN
+
+  TargetGroup:
+    DependsOn: LoadBalancer
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /healthz
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 5
+      HealthCheckPort: 3080
+      HealthCheckProtocol: HTTP
+      Name: AppLBTargetGroup
+      Port: 3080
+      Protocol: HTTP
+      TargetType: instance
+      VpcId: !Ref ApplicationVPC
